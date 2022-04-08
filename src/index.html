@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+
+    <title>Symphonia</title>
+
+    <style>
+        .node {
+            cursor: pointer;
+        }
+        
+        .node circle {
+            fill: #fff;
+            stroke: steelblue;
+            stroke-width: 3px;
+        }
+        
+        .node ellipse {
+            fill: #fff;
+            stroke: steelblue;
+            stroke-width: 3px;
+        }
+        
+        .text {
+            font: 12px sans-serif;
+            text-anchor: middle;
+            font-weight: bold;
+            overflow-wrap: break-word;
+        }
+        
+        .link {
+            fill: none;
+            stroke: #ccc;
+            stroke-width: 2px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            padding-top: 5px;
+        }
+        
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            white-space: pre;
+            border-top: solid black 2px;
+            border-left: solid black 2px;
+            border-right: solid black 2px;
+            border-bottom: solid black 2px;
+            border-top-right-radius: 10%;
+            border-bottom-right-radius: 10%;
+            border-top-left-radius: 10%;
+            border-bottom-left-radius: 10%;
+        }
+        
+        footer {
+            position: fixed;
+            right: 0;
+            bottom: 0;
+            width: 100%;
+            height: 100px;
+            background-color: grey;
+            color: white;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        
+        .search {
+            width: 30%;
+            float: right;
+            padding-top: 5px;
+        }
+        /* Pour le bouton de changement de vue */
+        
+        .onoffswitch {
+            position: relative;
+            width: 155px;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+        
+        .onoffswitch-checkbox {
+            display: none;
+        }
+        
+        .onoffswitch-label {
+            display: block;
+            overflow: hidden;
+            cursor: pointer;
+            border: 2px solid #999999;
+            border-radius: 20px;
+        }
+        
+        .onoffswitch-inner {
+            display: block;
+            width: 200%;
+            margin-left: -100%;
+            transition: margin 0.3s ease-in 0s;
+        }
+        
+        .onoffswitch-inner:before,
+        .onoffswitch-inner:after {
+            display: block;
+            float: left;
+            width: 50%;
+            height: 30px;
+            padding: 0;
+            line-height: 30px;
+            font-size: 14px;
+            color: white;
+            font-family: Trebuchet, Arial, sans-serif;
+            font-weight: bold;
+            box-sizing: border-box;
+        }
+        
+        .onoffswitch-inner:before {
+            content: "Tree View";
+            padding-left: 10px;
+            background-color: rgb(68, 128, 0);
+            color: #FFFFFF;
+        }
+        
+        .onoffswitch-inner:after {
+            content: "Cloud View";
+            padding-right: 10px;
+            background-color: rgb(0, 162, 255);
+            color: #FFFFFF;
+            text-align: right;
+        }
+        
+        .onoffswitch-switch {
+            display: block;
+            width: 46px;
+            margin: 2px;
+            background: #FFFFFF;
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            right: 101px;
+            border: 2px solid #999999;
+            border-radius: 20px;
+            transition: all 0.3s ease-in 0s;
+        }
+        
+        .onoffswitch-checkbox:checked+.onoffswitch-label .onoffswitch-inner {
+            margin-left: 0;
+        }
+        
+        .onoffswitch-checkbox:checked+.onoffswitch-label .onoffswitch-switch {
+            right: 0px;
+        }
+    </style>
+
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://unpkg.com/topojson@3"></script>
+    <link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/select2/3.5.0/select2.min.css">
+    </link>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/select2/3.5.0/select2.min.js"></script>
+
+    <link href="https://cdn.jsdelivr.net/gh/gitbrent/bootstrap4-toggle@3.6.1/css/bootstrap4-toggle.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/gh/gitbrent/bootstrap4-toggle@3.6.1/js/bootstrap4-toggle.min.js"></script>
+
+</head>
+
+<body style="margin-top: 0px;margin-bottom: 0px;">
+
+
+    <!-- The Modal -->
+
+    <!-- Frame to display the information of the node -->
+    <div id="myModal" class="modal">
+
+        <!-- Modal content -->
+        <div class="modal-content">
+            <p id="modaltext"></p>
+        </div>
+    </div>
+
+
+    <!-- Barre de recherche -->
+    <div id="searchDiv">
+        <div id="search"></div>
+    </div>
+
+
+    <!-- Footer -->
+    <footer id='leg' style="padding-top: 15px;padding-bottom: 15px;">
+
+        <!-- Switch afin de passer de la vue sous forme d'arbre à la vue en nuage -->
+        <div>
+            <div class="onoffswitch">
+                <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="myonoffswitch" onchange="importAndcallJson()" checked>
+                <label class="onoffswitch-label" for="myonoffswitch">
+          <span class="onoffswitch-inner"></span>
+          <span class="onoffswitch-switch"></span>
+        </label>
+            </div>
+        </div>
+
+        <!-- Bouton afin d'importer un fichier JSON -->
+        <div style="display: flex; ">
+            <input type="file" id="selectFiles" value="Import" />
+            <button id="import">Import</button>
+        </div>
+
+        <!-- Légende -->
+        <div id="legBigDiv" style="display: flex; ">
+
+        </div>
+
+
+
+    </footer>
+
+    <script>
+        //pour la barre de recherche
+        function searchTree(obj, search, path) { //searchTree recursively searches the tree for the search term and returns the path to the object if found
+
+            if (obj.data.name === search) { //if search is found return, add the object to the path and return it
+                path.push(obj);
+
+                return path;
+            } else if (obj.children || obj._children) { //if children are collapsed d3 object will have them instantiated as _children
+                var children = (obj.children) ? obj.children : obj._children;
+                for (var i = 0; i < children.length; i++) {
+                    path.push(obj); // we assume this path is the right one
+                    var found = searchTree(children[i], search, path);
+                    if (found) { // we were right, this should return the bubbled-up path from the first if statement
+                        return found;
+                    } else { //we were wrong, remove this parent from the path and continue iterating
+                        path.pop();
+                    }
+                }
+            } else { //not the right object, return false so it will continue to iterate in the loop
+                return false;
+            }
+        }
+
+
+        // Load the correct JSON file when we switch between the two views
+        function importAndcallJson() {
+            var files = document.getElementById('selectFiles').files;
+            console.log(files);
+            if (files.length <= 0) {
+                return false;
+            }
+
+            var fr = new FileReader();
+
+            fr.onload = function(e) { //when the file is loaded
+                data = JSON.parse(e.target.result);
+                //console.log(data);
+                //remove the previous tree
+                d3.select("svg").remove();
+                document.getElementById("legBigDiv").innerHTML = '<div id="legDiv" style="display: flex; justify-content: center; flex-direction: column; width: 100px; text-align: right; height: 100%; padding-right:6px;"></div><div id="legendDiv" style="display: flex; justify-content: center; flex-direction: column; width: 50px; height: 100%;"></div>';
+
+                if (document.getElementById('myonoffswitch').checked == true) { //if the switch is on, we display the tree
+
+                    d3.select("svg").remove();
+                    document.getElementById("searchDiv").innerHTML = '<div id="search"></div>';
+                    callJson(data)
+
+                } else { //if the switch is off, we display the cloud
+
+                    d3.select("svg").remove();
+                    document.getElementById("searchDiv").innerHTML = "";
+                    callJsonCloud(data);
+
+                }
+
+                //callJson(data);
+            };
+            fr.readAsText(files.item(0));
+        }
+
+
+
+        //Data JSON
+        let treeData = {};
+        let data = {};
+
+        document.getElementById('import').onclick = function() { //when the import button is clicked
+            importAndcallJson();
+        };
+
+
+        //create and display the tree
+        let callJson = function(data) {
+
+            treeData = data;
+
+            //set the dimensions of the diagram
+            var margin = {
+                    top: 100,
+                    right: 120,
+                    bottom: 20,
+                    left: 120
+                },
+                width = window.screen.width - margin.right - margin.left, //dynamic width of the diagram
+                height = window.screen.height - margin.top - margin.bottom;
+
+            var i = 0,
+                duration = 1000,
+                root,
+                select2_data; //declare variables for the tree layout
+
+            d3.select(self.frameElement).style("height", "width"); //resize the frame to the same size as the window
+
+            const treemap = d3.tree().size([width, height]).separation(function(a) {
+                return (50 / a.depth);
+            }); //declare tree layout and assign the size
+
+            // append the svg object to the body of the page
+            // appends a 'group' element to 'svg'
+            // moves the 'group' element to the top left margin
+            const svg = d3.select("body").append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+            g = svg.append("g")
+                .attr("transform",
+                    "translate(" + margin.left + "," + margin.top + ")");
+
+            // Assigns parent, children, height, depth
+            root = d3.hierarchy(treeData, function(d) {
+                return d.children;
+            });
+
+            root.x0 = height / 5;
+            root.y0 = 0;
+            console.log(treeData)
+
+            update(root);
+
+            var w = window,
+                d = document,
+                e = d.documentElement,
+                g = d.getElementsByTagName('body')[0]
+
+            function updateWindow() { //update the size of the svg when the window is resized
+                x = w.innerWidth || e.clientWidth || g.clientWidth;
+                y = w.innerHeight || e.clientHeight || g.clientHeight;
+
+                svg.attr("width", x).attr("height", y);
+            }
+            d3.select(window).on('resize.updatesvg', updateWindow);
+
+
+            // Get the names of all the nodes and add an ID for each one
+            select2_data2 = [];
+            index = 0;
+            var selectTreeData = treemap(root)
+                // Compute the new tree layout.
+            var SelectNodes = selectTreeData.descendants()
+            SelectNodes.forEach(function(d) {
+                index++;
+                select2_data2.push({
+                    id: index,
+                    text: d.data.name
+                });
+            })
+
+            if (data != null) {
+                $("#search").select2({
+                    data: select2_data2,
+                    containerCssClass: "search"
+                });
+
+                $("#search").on("select2-selecting", function(e) {
+
+                    var paths = searchTree(root, e.object.text, []);
+
+                    if (typeof(paths) !== "undefined") {
+                        openPaths(paths);
+
+                    } else {
+                        alert(e.object.text + " not found!");
+                    }
+
+                })
+            }
+
+            //Create and display the tree
+            function update(source) {
+
+
+                /////////////////////Start draw tree////////////////////////////////
+
+                // Assigns the x and y position for the nodes
+                var treeData = treemap(root)
+
+                // Compute the new tree layout.
+                var nodes = treeData.descendants(),
+                    links = treeData.descendants().slice(1);
+
+                // Normalize for fixed-depth.
+                nodes.forEach(function(d) {
+                    d.y = d.depth * 180 + 180;
+                });
+
+                ////////////////////Nodes Part/////////////////////////////////////
+
+                //Define the properties and draw the nodes
+                var node = svg.selectAll('g.node')
+                    .data(nodes, function(d) {
+                        return d.id || (d.id = ++i);
+                    });
+
+
+                // Enter any new modes at the parent's previous position.
+                var nodeEnter = node.enter().append('g')
+                    .attr('class', 'node')
+                    .attr("transform", function(d) {
+                        return "translate(" + d.x + "," + d.y + ")";
+                    })
+                    .on('mouseover', mouseover)
+                    .on('mouseout', mouseout)
+                    .on('click', click);
+
+
+
+
+                // Draw the nodes as an ellipse
+                nodeEnter.append('ellipse')
+                    .attr('class', 'node')
+                    .attr("id", function(d) {
+                        return "node" + d.id;
+                    })
+                    .attr("rx", d => {
+                        return d.data.weight * 3
+                    })
+                    .attr("ry", d => {
+                        return d.data.weight * 2
+                    })
+                    .style("fill", function(d) {
+                        return Color(d.data.type);
+                    })
+                    .style("stroke", function(d) {
+                        return Color(d.data.type);
+                    });
+
+                // Add labels to the nodes
+                nodeEnter.append('text')
+                    .attr("dx", ".35em")
+                    .attr("y", 0)
+                    .attr("x", 0)
+                    .style("text-anchor", "middle")
+                    .text(function(d) {
+                        return d.data.name;
+                    })
+                    .call(wrap, 10);
+
+                //Adjust the name display 
+                function wrap(text, width) {
+                    text.each(function() {
+                        var text = d3.select(this),
+                            words = text.text().split(/\s+/).reverse(),
+                            word,
+                            line = [],
+                            lineNumber = 1,
+                            lineHeight = 2,
+                            x = text.attr("x"),
+                            y = text.attr("y");
+                        tspan = text.text(null).append("tspan").attr("x", x).attr("y", y);
+
+                        while (word = words.pop()) {
+                            line.push(word);
+                            tspan.text(line.join(""));
+                            if (tspan.node().getComputedTextLength() > width) {
+                                line.pop();
+                                tspan.text(line.join(" "));
+                                line = [word];
+                                tspan = text.append("tspan").attr("x", x).attr("y", ++lineNumber * lineHeight + y).text(word);
+                            }
+                        }
+                    });
+                }
+
+                // Update the tree on interaction
+                // Transition to the proper position for the node
+                var nodeUpdate = node.transition()
+                    .duration(duration)
+                    .attr("transform", function(d) {
+                        return "translate(" + d.x + "," + d.y + ")";
+                    });
+
+                //////////////////// Start update the nodes//////////////////////
+
+                nodeUpdate.select('ellipse')
+                    .attr("rx", d => {
+                        return d.data.weight * 3
+                    })
+                    .attr("ry", d => {
+                        return d.data.weight * 2
+                    })
+                    .style("stroke", function(d) {
+                        return Color(d.data.type);
+                    })
+                    .style("fill", function(d) {
+                        return Color(d.data.type);
+                    })
+                    .attr('cursor', 'pointer');
+
+                nodeUpdate.select("text")
+                    .style("fill-opacity", 1)
+
+
+
+                // Remove any exiting nodes
+                var nodeExit = node.exit().transition()
+                    .duration(duration)
+                    .attr("transform", d => {
+                        return "translate(" + source.x + "," + source.y + ")";
+                    }).remove();
+
+
+                // On exit reduce the node circles size to 0
+                nodeExit.select("ellipse")
+                    .attr("rx", 0)
+                    .attr("ry", 0)
+                    .style("fill-opacity", 0)
+                    .style("stroke-opacity", 0);
+
+                // On exit reduce the opacity of text labels
+                nodeExit.select('text')
+                    .style("fill-opacity", 1e-6);
+
+                //////////////////// End update the nodes//////////////////////
+
+                ///////////////////Links Part/////////////////////
+
+                //Define the properties and draw the link
+                var link = svg.selectAll('path.link')
+                    .data(links, function(d) {
+                        return d.id;
+                    });
+
+                // Enter any new links at the parent's previous position.
+                var linkEnter = link.enter().insert('path', "g")
+                    .attr("class", "link")
+                    .attr("id", function(d) {
+                        return ("link" + d.parent.id + "-" + d.id);
+                    });
+
+                ///////////////////Start update the links/////////////////////
+                var linkUpdate = linkEnter.merge(link);
+
+                // Transition back to the parent element position
+                linkUpdate.transition()
+                    .duration(duration)
+                    .attr("d", d => {
+                        return "M" + d.x + "," + d.y +
+                            "C" + (d.x + d.parent.x) / 2 + "," + d.y +
+                            " " + (d.x + d.parent.x) / 2 + "," + d.parent.y +
+                            " " + d.parent.x + "," + d.parent.y;
+                    });
+
+
+                // Remove any exiting links
+                var linkExit = link.exit().transition()
+                    .duration(duration)
+                    .attr('d', function(d) {
+                        var o = {
+                            x: source.y,
+                            y: source.x
+                        }
+                        return diagonal(o, o)
+                    });
+
+                // Stash the old positions for transition.
+                nodes.forEach(function(d) {
+                    d.x0 = d.x;
+                    d.y0 = d.y;
+                });
+
+                ///////////////////End update the links/////////////////////
+
+                /////////////////////End draw tree////////////////////////////////
+            }
+
+
+            //Over the tree, highlight the path to the selected node find by the search bar
+            function openPaths(paths) {
+                //console.log(paths);
+                for (var i = 0; i < paths.length; i++) {
+                    if (paths[i].parent !== null) { //i.e. not root
+                        //console.log("paths[i].class = found et parent = " +paths[i].data.parent.name +" donc diff de null");
+                        //console.log(paths[i].parent);
+                        paths[i].class = 'found';
+                        //console.log("trouvé : " +paths[i].data.name);
+                        if (i < paths.length - 1) {
+                            if (paths[i]._children) { //if children are hidden: open them, otherwise: don't do anything
+                                paths[i].children = paths[i]._children;
+                                paths[i]._children = null;
+                            }
+                            update(paths[i]);
+                        }
+
+                        //console.log("PATH I : ");
+                        //console.log(paths[i]);
+                        mouseover({}, paths[i]);
+                    }
+                }
+            }
+
+            var modal = document.getElementById("myModal"); //Get the modal for the information display
+
+            // When the mouse over a node
+            function mouseover(event, d) {
+
+                var chaine = "Name : " + d.data.name + "\r\n" + ////Squeleton for the information panel
+                    "Parent : " + d.data.parent + "\r\n" +
+                    "Weight : " + d.data.weight + "\r\n" +
+                    "Count : " + d.data.count + "\r\n" +
+                    "Type : " + d.data.type + "\r\n";
+
+                var array = []
+
+                d3.selectAll("path").style("stroke", "#c3c3c3");
+                while (d.parent) {
+                    d3.selectAll("#node" + d.id).style("fill", function(d) {
+                        return Color(d.data.type); //Set the color of the node to the type of the node
+                    }).style('stroke-width', 15)
+                    if (d.parent != "null")
+                        d3.selectAll("#link" + d.parent.id + "-" + d.id).style("stroke", "violet").style('stroke-width', 8);
+                    d = d.parent;
+                    array.push(d.data.name); //Get the whole path of the node
+                }
+
+                document.getElementById("modaltext").textContent = chaine + "Path : " + array; //Display the information panel
+                modal.style.display = "block";
+            }
+
+            // When the mouse exit a node
+            function mouseout(event, d) {
+                d3.selectAll("ellipse").style("fill", function(d) {
+                    return Color(d.data.type);
+                }).style('stroke-width', 3);
+                d3.selectAll("path").style("stroke", "#c3c3c3").style('stroke-width', 2); //Set back the nodes and the links to their initial state
+                modal.style.display = "none"; //Hide the information panel
+            }
+
+            // Creates a curved (diagonal) path from parent to the child nodes
+            function diagonal(s, d) {
+
+                path = `M ${s.y} ${s.x}
+			C ${(s.y + d.y) / 2} ${s.x},
+			${(s.y + d.y) / 2} ${d.x},
+			${d.y} ${d.x}`
+
+                return path
+            }
+
+            // When the user click on a node
+            function click(event, d) {
+                if (d.children) {
+                    d._children = d.children;
+                    d.children = null;
+                } else {
+                    d.children = d._children;
+                    d._children = null;
+                }
+                update(d);
+            }
+
+            // Collapse the node and all it's children
+            function collapse(d) {
+                if (d.children) {
+                    d._children = d.children
+                    d._children.forEach(collapse)
+                    d.children = null
+                }
+            }
+
+
+
+            ////////////////Legend//////////////////
+
+            var legend = document.getElementById("Legend");
+            const BFS = [];
+
+            root.eachBefore(d => BFS.push( //BFS algorithm to get the type of each node
+                "".repeat(d.depth) +
+                `${d.data.type}`
+            ));
+
+            console.log(BFS);
+
+            var Finaltype = [];
+            var FinalColor = [];
+
+            $.each(BFS, function(i, el) { //Remove the duplicates
+                if ($.inArray(el, Finaltype) === -1) Finaltype.push(el);
+            });
+
+            console.log(Finaltype);
+
+
+            for (let i = 0; i < Finaltype.length; i++) { //Set the color of each type of node
+                FinalColor[i] = Color(Finaltype[i]);
+
+            }
+
+            console.log(FinalColor);
+
+
+            //Display the legend
+            document.getElementById("legBigDiv").innerHTML = '<div id="legDiv" style="display: flex; justify-content: center; flex-direction: column; width: 100px; text-align: right; height: 100%; padding-right:6px;"></div><div id="legendDiv" style="display: flex; justify-content: center; flex-direction: column; width: 50px; height: 100%;"></div>';
+            var legendDiv = document.getElementById("legendDiv");
+            var legDiv = document.getElementById("legDiv");
+            legendDiv.innerHTML = "";
+            legDiv.innerHTML = "";
+            var compteur = 0;
+            var numLeg = 1;
+            var yatilElse = false;
+            for (let i = 0; i < Finaltype.length; i++) {
+                compteur++;
+
+                if (FinalColor[i] != 'lightblue') {
+                    legDiv.innerHTML += '<font size="4pt" color="white" style="padding-left:6px;">' + Finaltype[i] + ' : </font> <div style="height: 4px;"></div>';
+                    legendDiv.innerHTML += '<div style="height: 20px; width: 100%; background-color: ' + FinalColor[i] + '; style="padding-left:6px;""></div><div style="height: 4px; width: 100%; background-color:gray;"></div>';
+                    console.log("finalColor:" + FinalColor[i]);
+                } else {
+                    yatilElse = true;
+                }
+
+                if (compteur == 4) { //If the legend is full, create a new colonne
+                    numLeg++;
+                    document.getElementById("legBigDiv").innerHTML += '<div id="legDiv' + numLeg + '" style="display: flex; justify-content: center; flex-direction: column; width: 50px; height: 100%;">';
+                    document.getElementById("legBigDiv").innerHTML += '<div id="legendDiv' + numLeg + '" style="display: flex; justify-content: center; flex-direction: column; width: 50px; height: 100%;">';
+                    legendDiv = document.getElementById("legendDiv" + numLeg);
+                    legDiv = document.getElementById("legDiv" + numLeg);
+
+                    compteur = 0;
+
+                }
+            }
+            if (yatilElse == true) { //If there is an else, display it
+                legDiv.innerHTML += '<font size="4pt" color="white" style="padding-left:6px;">Else :</font> <div style="height: 4px;"></div>';
+                legendDiv.innerHTML += '<div style="height: 20px; width: 100%; background-color: ' + Color("default") + ';" style="padding-left:6px;"></div><div style="height: 4px; width: 100%; background-color:gray;"></div>';
+            }
+        }
+
+        // fonction return color
+        function Color(type) {
+            switch (type) {
+                case 'dossier':
+                    return '#6fb8d4'; //blue
+                    break;
+
+                case 'pdf':
+                    return '#d35b5b'; //red
+                    break;
+
+                case 'txt':
+                    return '#e39146'; //orange
+                    break;
+
+                default:
+                    return 'lightblue'; //generic blue
+                    break;
+            }
+        }
+
+
+
+        ///Display the cloud
+        var callJsonCloud = function(json) {
+
+            var margin = {
+                    top: 100,
+                    right: 120,
+                    bottom: 20,
+                    left: 120
+                },
+
+                width = window.screen.width - margin.right - margin.left,
+                height = window.screen.height - margin.top - margin.bottom;
+
+            var data = json; //load the json file
+
+            color = d3.scaleLinear()
+                .domain([0, 5])
+                .range(["hsl(152,80%,80%)", "hsl(228,30%,40%)"])
+                .interpolate(d3.interpolateHcl)
+
+            const root = d3.pack() //create the pack layout
+                .size([width, height])
+                .padding(3)
+                (d3.hierarchy(data)
+                    .sum(d => d.weight)
+                    .sort((a, b) => b.weight - a.weight));
+
+            let focus = root;
+            let view;
+
+            console.log(root.descendants())
+
+            const svg = d3.select("body").append("svg") //create the svg element
+                .attr("viewBox", `-${width / 2} -${height / 2} ${width} ${height}`)
+                //.style("width", ""+(width + margin.right + margin.left))
+                //.style("height", ""+(height*1.7))
+                .style("display", "block")
+                .style("margin", "0 -14px")
+                .style("background", color(0))
+                .style("cursor", "pointer")
+                .on("click", (event) => zoom(event, root));
+
+            console.log(root.descendants().slice(1))
+
+
+            const node = svg.append("g") //create the node group
+                .selectAll("circle")
+                .data(root.descendants().slice(1))
+                .join("circle")
+                .attr("fill", d => Color(d.data.type) /*d.children ? color(d.depth) : color(Color(d.type))*/ )
+                .attr("pointer-events", d => !d.children ? "none" : null)
+                .attr("stroke", "#FFF")
+                .on("mouseover", function(d) {
+
+                    d3.select(this).attr("stroke", "#000");
+                    var modal = document.getElementById("myModal");
+
+                    var node = this.__data__;
+                    //console.log(node)
+                    var chaine = "Name : " + node.data.name + "\r\n" + ////Squeleton for the information panel
+                        "Parent : " + node.data.parent + "\r\n" +
+                        "Weight : " + node.data.weight + "\r\n" +
+                        "Count : " + node.data.count + "\r\n" +
+                        "Type : " + node.data.type + "\r\n";
+
+                    var array = []
+
+                    d3.selectAll("path").style("stroke", "#c3c3c3"); //Set back the nodes and the links to their initial state
+                    while (node.parent) { //While the node has a parent, keep going up in the hierarchy
+                        node = node.parent;
+                        array.push(node.data.name); //Get the whole path of the node
+                    }
+
+                    document.getElementById("modaltext").textContent = chaine + "Path : " + array; //Display the information panel
+                    modal.style.display = "block";
+
+                })
+                .on("mouseout", function(d) {
+
+                    d3.select(this).attr("stroke", "#FFF");
+                    var modal = document.getElementById("myModal");
+                    modal.style.display = "none"; //Hide the information panel
+
+                })
+                .on("click", (event, d) => focus !== d && (zoom(event, d), event.stopPropagation())); //When a node is clicked, zoom in
+
+
+            const label = svg.append("g") //create the label group
+                .style("font", "10px sans-serif")
+                .attr("pointer-events", "none")
+                .attr("text-anchor", "middle")
+                .selectAll("text")
+                .data(root.descendants())
+                .join("text")
+                .style("fill-opacity", d => d.parent === root ? 1 : 0)
+                .style("display", d => d.parent === root ? "inline" : "none")
+                .style("font-size", d => '15px')
+                .style("font-weight", d => '550')
+                .text(d => d.data.name);
+
+            console.log(root.descendants());
+
+            zoomTo([root.x, root.y, root.r * 3]); //zoom in to the root node
+
+            function zoomTo(v) { //zoom function
+                const k = width / v[2];
+
+                view = v;
+                console.log()
+
+                label.attr("transform", d => `translate(${(d.x - v[0]) * k},${(d.y - v[1]) * k})`);
+                node.attr("transform", d => `translate(${(d.x - v[0]) * k},${(d.y - v[1]) * k})`);
+                node.attr("r", d => d.r * k);
+            }
+
+            function zoom(event, d) { //zoom function
+                const focus0 = focus;
+
+                focus = d;
+
+                const transition = svg.transition()
+                    .duration(event.altKey ? 7500 : 750)
+                    .tween("zoom", d => {
+                        const i = d3.interpolateZoom(view, [focus.x, focus.y, focus.r * 5]);
+                        return t => zoomTo(i(t));
+                    });
+
+                label
+                    .filter(function(d) {
+                        return d.parent === focus || this.style.display === "inline";
+                    })
+                    .transition(transition)
+                    .style("fill-opacity", d => d.parent === focus ? 1 : 0)
+                    .on("start", function(d) {
+                        if (d.parent === focus) this.style.display = "inline";
+                    })
+                    .on("end", function(d) {
+                        if (d.parent !== focus) this.style.display = "none";
+                    });
+            }
+
+
+            ////////////////Legend//////////////////
+
+            var legend = document.getElementById("Legend");
+            const BFS = [];
+
+            root.eachBefore(d => BFS.push(
+                "".repeat(d.depth) +
+                `${d.data.type}`
+            ));
+
+            console.log(BFS);
+
+            var Finaltype = [];
+            var FinalColor = [];
+
+            $.each(BFS, function(i, el) {
+                if ($.inArray(el, Finaltype) === -1) Finaltype.push(el);
+            });
+
+            console.log(Finaltype);
+
+
+            for (let i = 0; i < Finaltype.length; i++) {
+                FinalColor[i] = Color(Finaltype[i]);
+
+            }
+
+            console.log(FinalColor);
+
+            document.getElementById("legBigDiv").innerHTML = '<div id="legDiv" style="display: flex; justify-content: center; flex-direction: column; width: 100px; text-align: right; height: 100%; padding-right:6px;"></div><div id="legendDiv" style="display: flex; justify-content: center; flex-direction: column; width: 50px; height: 100%;"></div>';
+            var legendDiv = document.getElementById("legendDiv");
+            var legDiv = document.getElementById("legDiv");
+            legendDiv.innerHTML = "";
+            legDiv.innerHTML = "";
+            var compteur = 0;
+            var numLeg = 1;
+            var yatilElse = false;
+            for (let i = 0; i < Finaltype.length; i++) {
+                compteur++;
+
+                if (FinalColor[i] != 'lightblue') {
+                    legDiv.innerHTML += '<font size="4pt" color="white" style="padding-left:6px;">' + Finaltype[i] + ' : </font> <div style="height: 4px;"></div>';
+                    legendDiv.innerHTML += '<div style="height: 20px; width: 100%; background-color: ' + FinalColor[i] + '; style="padding-left:6px;""></div><div style="height: 4px; width: 100%; background-color:gray;"></div>';
+                    console.log("finalColor:" + FinalColor[i]);
+                } else {
+                    yatilElse = true;
+                }
+
+                if (compteur == 4) {
+                    numLeg++;
+                    document.getElementById("legBigDiv").innerHTML += '<div id="legDiv' + numLeg + '" style="display: flex; justify-content: center; flex-direction: column; width: 50px; height: 100%;">';
+                    document.getElementById("legBigDiv").innerHTML += '<div id="legendDiv' + numLeg + '" style="display: flex; justify-content: center; flex-direction: column; width: 50px; height: 100%;">';
+                    legendDiv = document.getElementById("legendDiv" + numLeg);
+                    legDiv = document.getElementById("legDiv" + numLeg);
+
+                    compteur = 0;
+
+                }
+            }
+            if (yatilElse == true) {
+                legDiv.innerHTML += '<font size="4pt" color="white" style="padding-left:6px;">Else :</font> <div style="height: 4px;"></div>';
+                legendDiv.innerHTML += '<div style="height: 20px; width: 100%; background-color: ' + Color("default") + ';" style="padding-left:6px;"></div><div style="height: 4px; width: 100%; background-color:gray;"></div>';
+            }
+        };
+    </script>
+
+
+</body>
+
+</html>

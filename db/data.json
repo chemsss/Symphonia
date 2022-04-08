@@ -1,0 +1,117 @@
+{
+    "name": "Symphonia",
+    "name": "Bureau",
+    "parent": "null",
+    "weight": 40,
+    "count": 100,
+    "type": "dossier",
+    "children": [{
+            "name": "Pole Chirurgie",
+            "parent": "Symphonia",
+            "weight": 15,
+            "count": 100,
+            "type": "dossier",
+            "children": [{
+                    "name": "Bloc Opératoire",
+                    "parent": "Pole Chirurgie",
+                    "weight": 5,
+                    "count": 30,
+                    "type": "pdf"
+                },
+                {
+                    "name": "Chirurgie Ambulatoire",
+                    "parent": "Pole Chirurgie",
+                    "weight": 5,
+                    "count": 15,
+                    "type": "txt"
+                },
+                {
+                    "name": "Chirurgie Specialite",
+                    "parent": "Pole Chirurgie",
+                    "weight": 5,
+                    "count": 25,
+                    "type": "pdf"
+                }
+            ]
+        },
+        {
+            "name": "Pole Geriatrie",
+            "parent": "Symphonia",
+            "weight": 10,
+            "count": 50,
+            "type": "dossier",
+            "children": [{
+                    "name": "Alzheimer",
+                    "parent": "Pole Geriatrie",
+                    "weight": 5,
+                    "count": 33,
+                    "type": "dossier",
+                    "children": [{
+                        "name": "Descriptif",
+                        "parent": "Alzheimer",
+                        "weight": 5,
+                        "count": 12,
+                        "type": "pdf"
+                    }]
+                },
+                {
+                    "name": "Consultations",
+                    "parent": "Pole Geriatrie",
+                    "weight": 5,
+                    "count": 6,
+                    "type": "txt"
+                },
+                {
+                    "name": "Court Séjour Gériatrique",
+                    "parent": "Pole Geriatrie",
+                    "weight": 5,
+                    "count": 17,
+                    "type": "dossier",
+                    "children": [{
+                        "name": "Court Séjour Gériatrique",
+                        "parent": "Activités Principales",
+                        "weight": 5,
+                        "count": 23,
+                        "type": "else"
+                    }]
+                }
+            ]
+        },
+        {
+            "name": "Pole Medecine",
+            "parent": "Symphonia",
+            "weight": 10,
+            "count": 25,
+            "type": "dossier",
+            "children": [{
+                    "name": "Anesthesiologie",
+                    "parent": "Pole Medecine",
+                    "weight": 5,
+                    "count": 12,
+                    "type": "dossier",
+                    "children": [{
+                        "name": "Activites",
+                        "parent": "Anesthesiologie",
+                        "weight": 5,
+                        "count": 3,
+                        "type": "pdf"
+                    }]
+                },
+                {
+                    "name": "Cardiologie",
+                    "parent": "Pole Medecine",
+                    "weight": 5,
+                    "count": 10,
+                    "type": "dossier",
+                    "children": [{
+                        "name": "Activités Principales",
+                        "parent": "Anesthesiologie",
+                        "weight": 5,
+                        "count": 3,
+                        "type": "txt"
+                    }]
+                }
+            ]
+        }
+    ]
+}

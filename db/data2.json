@@ -1,0 +1,220 @@
+{
+    "name": "Symphonia",
+    "name": "Bureau",
+    "parent": "null",
+    "weight": 40,
+    "count": 100,
+    "type": "dossier",
+    "children": [{
+            "name": "Pole Chirurgie",
+            "parent": "Symphonia",
+            "weight": 15,
+            "count": 100,
+            "type": "dossier",
+            "children": [{
+                    "name": "Bloc Opératoire",
+                    "parent": "Pole Chirurgie",
+                    "weight": 5,
+                    "count": 30,
+                    "type": "dossier",
+                    "children": [{
+                            "name": "Chirurgie ORL",
+                            "parent": "Bloc Opératoire",
+                            "weight": 5,
+                            "count": 30,
+                            "type": "pdf"
+
+                        },
+                        {
+                            "name": "Chirurgie vasculaire",
+                            "parent": "Bloc Opératoire",
+                            "weight": 5,
+                            "count": 30,
+                            "type": "xlsx"
+
+                        },
+                        {
+                            "name": "Endoscopie bronchique",
+                            "parent": "Bloc Opératoire",
+                            "weight": 5,
+                            "count": 30,
+                            "type": "txt"
+
+                        }
+                    ]
+                },
+                {
+                    "name": "Chirurgie Ambulatoire",
+                    "parent": "Pole Chirurgie",
+                    "weight": 5,
+                    "count": 15,
+                    "type": "dossier",
+                    "children": [{
+                            "name": "Orthopédie",
+                            "parent": "Chirurgie Ambulatoire",
+                            "weight": 5,
+                            "count": 30,
+                            "type": "pdf"
+
+                        },
+                        {
+                            "name": "Rhinoplastie",
+                            "parent": "Chirurgie Ambulatoire",
+                            "weight": 5,
+                            "count": 30,
+                            "type": "xlsx"
+
+                        }
+                    ]
+                },
+                {
+                    "name": "Chirurgie Dentaire",
+                    "parent": "Pole Chirurgie",
+                    "weight": 5,
+                    "count": 25,
+                    "type": "dossier",
+                    "children": [{
+                            "name": "Odonthologie",
+                            "parent": "Chirurgie Dentaire",
+                            "weight": 5,
+                            "count": 30,
+                            "type": "pdf"
+
+                        },
+                        {
+                            "name": "Chirurgie implantaire",
+                            "parent": "Chirurgie Dentaire",
+                            "weight": 5,
+                            "count": 30,
+                            "type": "txt"
+
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Pole Geriatrie",
+            "parent": "Symphonia",
+            "weight": 10,
+            "count": 50,
+            "type": "dossier",
+            "children": [{
+                    "name": "Alzheimer",
+                    "parent": "Pole Geriatrie",
+                    "weight": 5,
+                    "count": 33,
+                    "type": "dossier",
+                    "children": [{
+                        "name": "Descriptif",
+                        "parent": "Alzheimer",
+                        "weight": 5,
+                        "count": 12,
+                        "type": "pdf"
+                    }]
+                },
+                {
+                    "name": "Consultations",
+                    "parent": "Pole Geriatrie",
+                    "weight": 5,
+                    "count": 6,
+                    "type": "dossier",
+                    "children": [{
+                            "name": "Gériatrique",
+                            "parent": "Consultations",
+                            "weight": 5,
+                            "count": 12,
+                            "type": "video"
+                        },
+                        {
+                            "name": "Mémoire",
+                            "parent": "Consultations",
+                            "weight": 5,
+                            "count": 12,
+                            "type": "pdf"
+                        }
+                    ]
+                },
+                {
+                    "name": "Court Séjour Gériatrique",
+                    "parent": "Pole Geriatrie",
+                    "weight": 5,
+                    "count": 17,
+                    "type": "dossier",
+                    "children": [{
+                        "name": "Court Séjour Gériatrique",
+                        "parent": "Activités Principales",
+                        "weight": 5,
+                        "count": 23,
+                        "type": "vidéo"
+                    }]
+                }
+            ]
+        },
+        {
+            "name": "Pole Medecine",
+            "parent": "Symphonia",
+            "weight": 10,
+            "count": 25,
+            "type": "dossier",
+            "children": [{
+                    "name": "Anesthesiologie",
+                    "parent": "Pole Medecine",
+                    "weight": 5,
+                    "count": 12,
+                    "type": "dossier",
+                    "children": [{
+                        "name": "Activites",
+                        "parent": "Anesthesiologie",
+                        "weight": 5,
+                        "count": 3,
+                        "type": "pdf"
+                    }]
+                },
+                {
+                    "name": "Cardiologie",
+                    "parent": "Pole Medecine",
+                    "weight": 5,
+                    "count": 10,
+                    "type": "dossier",
+                    "children": [{
+                        "name": "Activités Principales",
+                        "parent": "Anesthesiologie",
+                        "weight": 5,
+                        "count": 3,
+                        "type": "txt"
+                    }]
+                },
+                {
+                    "name": "Education thérapeutique",
+                    "parent": "Pole Medecine",
+                    "weight": 5,
+                    "count": 10,
+                    "type": "dossier",
+                    "children": [{
+                            "name": "Diabétologie",
+                            "parent": "Education thérapeutique",
+                            "weight": 5,
+                            "count": 3,
+                            "type": "xlsx"
+                        },
+                        {
+                            "name": "Hépatites",
+                            "parent": "Education thérapeutique",
+                            "weight": 5,
+                            "count": 3,
+                            "type": "txt"
+                        },
+                        {
+                            "name": "Néphrologie",
+                            "parent": "Education thérapeutique",
+                            "weight": 5,
+                            "count": 3,
+                            "type": "txt"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
